@@ -8,14 +8,17 @@ It enables a set of WordPress filters for customizing the posts and custom posts
 - PHP 7.2
 
 ## Setup the Algolia App.
+
+Add the Algolia's app id and the admin api key.
 ```php
 $algolia = new AlgoliaIntegration( 'app_id', 'admin_api_key' );
 ```
 
 ## Setup a post type to sync with default fields.
 
+Add the post type and the Algolia index.
 ```php
-$algolia->createPostSync( 'pos_type', 'algolia_index_name' );
+$algolia->createPostSync( 'post_type', 'algolia_index_name' );
 ```
 
 Default fields that are synced:
@@ -31,4 +34,20 @@ Default fields that are synced:
     'tags'     => [ 'tag1_name', 'tag2_name' ],
     'url'      => 'post_permalink',
 ]
+```
+
+## Sync custom fields.
+
+Use the filter `'algolia_integration_format_' . $post_type` to return an array with the data you want to sync.
+```php
+add_filter(
+	'algolia_integration_format_' . $post_type,
+	function( $record_format, $post_id ) {
+		return [
+			'acf_field1' => 'custom_data',
+			'acf_field2' => 'custom_data',
+		];
+	},
+	10, 2
+);
 ```
