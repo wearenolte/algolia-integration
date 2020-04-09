@@ -1,4 +1,4 @@
-# Algolia integration plugin
+# Algolia integration WordPress plugin
 
 This plugin for WordPress wraps the Algolia Search Client for initializing an Algolia app.
 
@@ -10,21 +10,22 @@ The data uploaded to Algolia can be customized with a filter.
 ## Prerequisites
 - PHP 7.2
 
-## Setup the Algolia App.
+## Setup the Algolia App
 
 Go to Settings -> Algolia Integration
 
 Add the Algolia app ID and admin api key.
+
 Add the Algolia test app ID and test admin api key.
 
-## Enable post types to syns
+## Enable post types to sync
 
 Go to Settings -> Algolia Integration
 
 Select which posts types will be uploaded to Algolia on Post publised
 or deleted from Algolia when the post status is different than published.
 
-## Default post fields to sync.
+## Default post fields to sync
 
 Default fields that are synced:
 ```php
