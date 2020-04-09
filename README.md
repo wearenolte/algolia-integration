@@ -2,37 +2,43 @@
 
 This plugin for WordPress wraps the Algolia Search Client for initializing an Algolia app.
 
-It enables a set of WordPress filters for customizing the posts and custom posts data to sync to Algolia. 
+Add the production app and a test app which will be used when DEBUG is on.
+
+It enables a settings page for selecting which posts types to sync to Algolia.
+The data uploaded to Algolia can be customized with a filter. 
 
 ## Prerequisites
 - PHP 7.2
 
 ## Setup the Algolia App.
 
-Add the Algolia's app id and the admin api key.
-```php
-$algolia = new AlgoliaIntegration( 'app_id', 'admin_api_key' );
-```
+Go to Settings -> Algolia Integration
 
-## Setup a post type to sync with default fields.
+Add the Algolia app ID and admin api key.
+Add the Algolia test app ID and test admin api key.
 
-Add the post type and the Algolia index.
-```php
-$algolia->createPostSync( 'post_type', 'algolia_index_name' );
-```
+## Enable post types to syns
+
+Go to Settings -> Algolia Integration
+
+Select which posts types will be uploaded to Algolia on Post publised
+or deleted from Algolia when the post status is different than published.
+
+## Default post fields to sync.
 
 Default fields that are synced:
 ```php
 [
-    'title'    => 'post_title',
-    'author'   => [
-        'id'   => 'author_id',
-        'name' => 'author_name',
+    'title'              => 'post_title',
+    'author'             => [
+        'id'             => 'author_id',
+        'name'           => 'author_name',
     ],
-    'excerpt'  => 'post_excerpt',
-    'content'  => wp_strip_all_tags( 'post_content' ),
-    'tags'     => [ 'tag1_name', 'tag2_name' ],
-    'url'      => 'post_permalink',
+    'excerpt'            => 'post_excerpt',
+    'content'            => wp_strip_all_tags( 'post_content' ),
+    'tags'               => [ 'tag1_name', 'tag2_name' ],
+    'url'                => 'post_permalink',
+    'featured_image_url' => 'featured_image_url',
 ]
 ```
 
@@ -43,10 +49,13 @@ Use the filter `'algolia_integration_format_' . $post_type` to return an array w
 add_filter(
 	'algolia_integration_format_' . $post_type,
 	function( $record_format, $post_id ) {
-		return [
-			'acf_field1' => 'custom_data',
-			'acf_field2' => 'custom_data',
-		];
+		return array_merge(
+		    $record_format,
+            [
+                'acf_field1' => 'custom_data',
+                'acf_field2' => 'custom_data',
+            ]
+		);
 	},
 	10, 2
 );

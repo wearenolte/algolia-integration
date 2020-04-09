@@ -1,6 +1,6 @@
 <?php
 
-namespace AlgoliaIntegration;
+namespace AlgoliaIntegration\src;
 
 use Algolia\AlgoliaSearch\SearchIndex;
 
@@ -15,34 +15,27 @@ class PostSync {
 	/**
 	 * The Algolia index.
 	 *
+	 * @since 1.0.0
 	 * @var SearchIndex
 	 */
 	private $index;
 
 	/**
-	 * The record array structure to sync.
-	 *
-	 * @var array
-	 */
-	private $record_format;
-
-	/**
 	 * PostSync constructor.
 	 *
+	 * @since 1.0.0
 	 * @param string      $post_type     The Post type to sync.
 	 * @param SearchIndex $index         The Algolia index.
-	 * @param array       $record_format The record array structure to sync.
 	 */
-	public function __construct( string $post_type, SearchIndex $index, array $record_format ) {
-		$this->index         = $index;
-		$this->record_format = $record_format;
-
+	public function __construct( string $post_type, SearchIndex $index ) {
+		$this->index = $index;
 		add_action( 'save_post_' . $post_type, [ $this, 'update_post' ], 10, 2 );
 	}
 
 	/**
-	 * Adds or updates a post record.
+	 * Adds, removes or updates a post record.
 	 *
+	 * @since 1.0.0
 	 * @param int      $post_id  The post ID.
 	 * @param \WP_Post $the_post The post object.
 	 */
@@ -57,9 +50,8 @@ class PostSync {
 			$record['objectID'] = implode( '#', [ $the_post->post_type, $the_post->ID ] );
 		}
 
-		if ( 'trash' === $the_post->post_status ) {
+		if ( 'publish' !== $the_post->post_status ) {
 			$this->index->deleteObject( $record['objectID'] );
-
 			return;
 		}
 
@@ -69,8 +61,8 @@ class PostSync {
 	/**
 	 * Returns a Post's data in a format ready to be saved in Algolia.
 	 *
+	 * @since 1.0.0
 	 * @param \WP_Post $the_post The post object.
-	 *
 	 * @return array
 	 */
 	public function format_post( \WP_Post $the_post ) {
@@ -88,22 +80,21 @@ class PostSync {
 			wp_get_post_terms( $the_post->ID, 'category' )
 		);
 
-		return wp_parse_args(
-			apply_filters( 'algolia_integration_format_' . $the_post->post_type, [], $the_post->ID ),
-			[
-				'objectID'           => implode( '#', [ $the_post->post_type, $the_post->ID ] ),
-				'title'              => $the_post->post_title,
-				'author'             => [
-					'id'   => $the_post->post_author,
-					'name' => get_user_by( 'ID', $the_post->post_author )->display_name,
-				],
-				'excerpt'            => $the_post->post_excerpt,
-				'content'            => wp_strip_all_tags( $the_post->post_content ),
-				'tags'               => $tags,
-				'categories'         => $categories,
-				'url'                => get_post_permalink( $the_post->ID ),
-				'featured_image_url' => get_the_post_thumbnail_url( $the_post->ID ),
-			]
-		);
+		$default_fields = [
+			'objectID'           => implode( '#', [ $the_post->post_type, $the_post->ID ] ),
+			'title'              => $the_post->post_title,
+			'author'             => [
+				'id'   => $the_post->post_author,
+				'name' => get_user_by( 'ID', $the_post->post_author )->display_name,
+			],
+			'excerpt'            => $the_post->post_excerpt,
+			'content'            => wp_strip_all_tags( $the_post->post_content ),
+			'tags'               => $tags,
+			'categories'         => $categories,
+			'url'                => get_post_permalink( $the_post->ID ),
+			'featured_image_url' => get_the_post_thumbnail_url( $the_post->ID ),
+		];
+
+		return apply_filters( 'algolia_integration_format_' . $the_post->post_type, $default_fields, $the_post->ID );
 	}
 }

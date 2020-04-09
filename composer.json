@@ -26,7 +26,7 @@
     },
     "autoload": {
         "psr-4": {
-            "AlgoliaIntegration\\": "src/"
+            "AlgoliaIntegration\\": [ "", "src/", "wp/" ]
         }
     },
     "scripts": {

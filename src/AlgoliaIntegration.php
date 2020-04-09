@@ -1,11 +1,12 @@
 <?php
 
-namespace AlgoliaIntegration;
+namespace AlgoliaIntegration\src;
 
 use Algolia\AlgoliaSearch\SearchClient;
+use Algolia\AlgoliaSearch\SearchIndex;
 
 /**
- * Init plugin.
+ * Init Algolia Integration Main Class.
  *
  * @SuppressWarnings(PHPMD.StaticAccess)
  */
@@ -13,6 +14,7 @@ class AlgoliaIntegration {
 	/**
 	 * The Algolia client.
 	 *
+	 * @since 1.0.0
 	 * @var $algolia_client
 	 */
 	private $algolia_client;
@@ -20,24 +22,22 @@ class AlgoliaIntegration {
 	/**
 	 * AlgoliaIntegration constructor.
 	 *
+	 * @since 1.0.0
 	 * @param string $app_id The Algolia app ID.
 	 * @param string $admin_api_key The Algolia admin api key.
 	 */
 	public function __construct( string $app_id, string $admin_api_key ) {
-		if ( $app_id && $admin_api_key ) {
-			$this->algolia_client = SearchClient::create( $app_id, $admin_api_key );
-		}
+		$this->algolia_client = SearchClient::create( $app_id, $admin_api_key );
 	}
 
 	/**
-	 * Call to sync an index with a post type.
+	 * Returns the Algolia index.
 	 *
-	 * @param string $post_type The post type to sync.
-	 * @param string $index_name Tha Algolia index name.
-	 * @param array  $record_format The data to sync in array format.
+	 * @since 1.0.0
+	 * @param string $index The Algolia index name.
+	 * @return \Algolia\AlgoliaSearch\SearchIndex
 	 */
-	public function create_post_sync( string $post_type, string $index_name, array $record_format = [] ) {
-		$index = $this->algolia_client->initIndex( $index_name );
-		new PostSync( $post_type, $index, $record_format );
+	public function get_index( string $index ) : SearchIndex {
+		return $this->algolia_client->initIndex( $index );
 	}
 }
