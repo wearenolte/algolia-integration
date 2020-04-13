@@ -8,6 +8,8 @@ use Algolia\AlgoliaSearch\SearchIndex;
 /**
  * Init Algolia Integration Main Class.
  *
+ * Docs: https://www.algolia.com/doc/integration/wordpress/getting-started/quick-start/?language=php
+ *
  * @SuppressWarnings(PHPMD.StaticAccess)
  */
 class AlgoliaIntegration {

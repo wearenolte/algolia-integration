@@ -18,4 +18,6 @@ use AlgoliaIntegration\wp\InitPlugin;
 * @package         Algolia_Integration
 */
 
+define( 'ALGOLIA_INTEGRATION_PLUGIN_PATH', plugin_dir_url( __FILE__ ) );
+
 new InitPlugin();

@@ -1,11 +1,14 @@
 # Algolia integration WordPress plugin
 
-This plugin for WordPress wraps the Algolia Search Client for initializing an Algolia app.
+This plugin for WordPress wraps the [Algolia Search Client v2.6](https://www.algolia.com/doc/integration/wordpress/getting-started/quick-start/?language=php) for initializing an Algolia app.
 
-Add the production app and a test app which will be used when DEBUG is on.
+Select which posts types to sync to Algolia. It will create the Algolia index using the post type name. 
 
-It enables a settings page for selecting which posts types to sync to Algolia.
 The data uploaded to Algolia can be customized with a filter. 
+
+This plugin will also install [instantsearch.js 2.10.4](https://community.algolia.com/instantsearch.js/v2/getting-started.html)
+
+It will replace WordPress default search box for the Instant Search Search Box widget.
 
 ## Prerequisites
 - PHP 7.2
@@ -43,9 +46,17 @@ Default fields that are synced:
 ]
 ```
 
+## Posts sync statuses.
+By default this plugin only saves to Algolia when a post is saved with `publish` status.
+
+If the post is thrashed, deleted or changed to other status than `publish`, it will be deleted from Algolia. 
+
+
 ## Sync custom fields.
 
 Use the filter `'algolia_integration_format_' . $post_type` to return an array with the data you want to sync.
+
+Example:
 ```php
 add_filter(
 	'algolia_integration_format_' . $post_type,
@@ -60,4 +71,26 @@ add_filter(
 	},
 	10, 2
 );
+```
+
+## Customize the index settings:
+
+You can set the index settings with this filter.
+
+By default, the searchable attributes are the title and the content.
+
+```php
+add_filter(
+	'algolia_integration_index_settings_' . $post_type,
+	function() {
+	 return [
+        'searchableAttributes' => ['business_segment'],
+     ];
+	}
+);
+```
+
+### Disable Instant Search CSS assets loading
+```php
+add_filter('algolia_integration_disable_instant_search_css', '__return_true' );
 ```

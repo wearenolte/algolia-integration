@@ -16,9 +16,18 @@ class PostSync {
 	 * The Algolia index.
 	 *
 	 * @since 1.0.0
-	 * @var SearchIndex
+	 * @var $index
 	 */
 	private $index;
+
+	/**
+	 * The post type.
+	 *
+	 * @since 1.0.0
+	 * @var $post_type
+	 */
+	private $post_type;
+
 
 	/**
 	 * PostSync constructor.
@@ -28,7 +37,9 @@ class PostSync {
 	 * @param SearchIndex $index         The Algolia index.
 	 */
 	public function __construct( string $post_type, SearchIndex $index ) {
-		$this->index = $index;
+		$this->index     = $index;
+		$this->post_type = $post_type;
+
 		add_action( 'save_post_' . $post_type, [ $this, 'update_post' ], 10, 2 );
 	}
 
@@ -50,12 +61,16 @@ class PostSync {
 			$record['objectID'] = implode( '#', [ $the_post->post_type, $the_post->ID ] );
 		}
 
-		if ( 'publish' !== $the_post->post_status ) {
-			$this->index->deleteObject( $record['objectID'] );
-			return;
-		}
+		try {
+			if ( 'publish' !== $the_post->post_status ) {
+				$this->index->deleteObject( $record['objectID'] );
+				return;
+			}
 
-		$this->index->saveObject( $record );
+			$this->index->saveObject( $record );
+		} catch ( \Exception $e ) {
+			error_log( 'Error synching to Algolia' );
+		}
 	}
 
 	/**
@@ -96,5 +111,23 @@ class PostSync {
 		];
 
 		return apply_filters( 'algolia_integration_format_' . $the_post->post_type, $default_fields, $the_post->ID );
+	}
+
+	/**
+	 * Set the default searchable atrtibutes of an index.
+	 *
+	 * Docs: https://www.algolia.com/doc/api-reference/api-methods/set-settings/
+	 */
+	public function set_searchable_attributes() {
+		$default_index_settings = [
+			'searchableAttributes' => [ 'title', 'content' ],
+		];
+
+		$this->index->setSettings(
+			apply_filters(
+				'algolia_integration_index_settings_' . $this->post_type,
+				$default_index_settings
+			)
+		);
 	}
 }

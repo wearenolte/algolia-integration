@@ -29,47 +29,59 @@ class SettingsPage {
 	private $settings_page;
 
 	/**
-	 * The APP ID options key where the data is saved.
+	 * The APP ID option key where the data is saved.
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string $options The options key.
 	 */
 	const FIELD_APP_ID = 'algolia_integration_app_id';
 
 	/**
-	 * The Admin API key options key where the data is saved.
+	 * The Admin API key option key where the data is saved.
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string $options The options key.
 	 */
 	const FIELD_ADMIN_API_KEY = 'algolia_integration_admin_api_key';
 
 	/**
-	 * The test APP ID options key where the data is saved.
+	 * The Search-Only API Key option key where the data is saved.
 	 *
 	 * @since    1.0.0
 	 * @access   private
 	 * @var      string $options The options key.
+	 */
+	const FIELD_SEARCH_ONLY_KEY = 'algolia_integration_search_only_key';
+
+	/**
+	 * The test APP ID option key where the data is saved.
+	 *
+	 * @since    1.0.0
+	 * @access   private
 	 */
 	const FIELD_APP_ID_TEST = 'algolia_integration_app_id_test';
 
 	/**
-	 * The test Admin API key options key where the data is saved.
+	 * The test Admin API key option key where the data is saved.
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string $options The options key.
 	 */
 	const FIELD_ADMIN_API_KEY_TEST = 'algolia_integration_admin_api_key_test';
+
+	/**
+	 * The test Search-Only API Key option key where the data is saved.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	const FIELD_SEARCH_ONLY_KEY_TEST = 'algolia_integration_search_only_key_test';
 
 	/**
 	 * The post types options key where the data is saved.
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string $options The options key.
 	 */
 	const FIELD_POST_TYPES = 'algolia_integration_post_types';
 
@@ -149,6 +161,13 @@ class SettingsPage {
 		);
 
 		new SettingTextField(
+			self::FIELD_SEARCH_ONLY_KEY,
+			'Search-Only API key',
+			$this->settings_page,
+			$section_1_id
+		);
+
+		new SettingTextField(
 			self::FIELD_APP_ID_TEST,
 			'App ID',
 			$this->settings_page,
@@ -158,6 +177,13 @@ class SettingsPage {
 		new SettingTextField(
 			self::FIELD_ADMIN_API_KEY_TEST,
 			'Admin API key',
+			$this->settings_page,
+			$section_2_id
+		);
+
+		new SettingTextField(
+			self::FIELD_SEARCH_ONLY_KEY_TEST,
+			'Search-Only API key',
 			$this->settings_page,
 			$section_2_id
 		);
