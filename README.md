@@ -113,3 +113,13 @@ Print the Instant Search Box widget using this shortcode:
 Print the Instant Search Box hits (results) widget using this shortcode:
 
 `print_algolia_results`
+
+## Change the hits item template
+```php
+add_filter( 
+    'algolia_integration_hits_template', 
+    function() { 
+        return '<li>{{{_highlightResult.title.value}}}</li>'; 
+    } 
+);
+```

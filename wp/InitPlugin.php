@@ -37,7 +37,7 @@ class InitPlugin {
 
 	/**
 	 * The Algolia Search-only key.
-
+	 *
 	 * @since 1.0.0
 	 * @var string $search_key
 	 */
@@ -75,10 +75,25 @@ class InitPlugin {
 	 */
 	public function init() {
 		// Get options data.
-		$this->app_id        = (string) get_option( WP_DEBUG ? OptionsApiKeys::FIELD_APP_ID_TEST : OptionsApiKeys::FIELD_APP_ID );
-		$this->search_key    = (string) get_option( WP_DEBUG ? OptionsApiKeys::FIELD_SEARCH_ONLY_KEY_TEST : OptionsApiKeys::FIELD_SEARCH_ONLY_KEY );
-		$this->admin_api_key = (string) get_option( WP_DEBUG ? OptionsApiKeys::FIELD_ADMIN_API_KEY_TEST : OptionsApiKeys::FIELD_ADMIN_API_KEY );
-		$this->post_types    = (array) get_option( OptionsApiKeys::FIELD_POST_TYPES );
+		$this->app_id = (string) get_option(
+			WP_DEBUG
+				? OptionsApiKeys::FIELD_APP_ID_TEST
+				: OptionsApiKeys::FIELD_APP_ID
+		);
+
+		$this->search_key = (string) get_option(
+			WP_DEBUG
+				? OptionsApiKeys::FIELD_SEARCH_ONLY_KEY_TEST
+				: OptionsApiKeys::FIELD_SEARCH_ONLY_KEY
+		);
+
+		$this->admin_api_key = (string) get_option(
+			WP_DEBUG
+				? OptionsApiKeys::FIELD_ADMIN_API_KEY_TEST
+				: OptionsApiKeys::FIELD_ADMIN_API_KEY
+		);
+
+		$this->post_types = (array) get_option( OptionsApiKeys::FIELD_POST_TYPES );
 
 		// Init Settings page.
 		new SettingsPage( self::PLUGIN_NAME );
@@ -95,9 +110,13 @@ class InitPlugin {
 		// Init Instant Search.
 		new LoadAssets(
 			[
-				'app_id'     => $this->app_id,
-				'search_key' => $this->search_key,
-				'post_types' => $post_types->get_synced_post_types(),
+				'app_id'             => $this->app_id,
+				'search_key'         => $this->search_key,
+				'post_types'         => $post_types->get_synced_post_types(),
+				'hits_item_template' => apply_filters(
+					'algolia_integration_hits_template',
+					'<a href="{{{url}}}">{{{_highlightResult.title.value}}}</a>'
+				),
 			]
 		);
 

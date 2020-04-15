@@ -73,7 +73,7 @@
       container: '#hits-' + mainSearchKey,
       templates: {
         empty: 'No results',
-        item: '{{{_highlightResult.title.value}}}'
+        item: window.algolia.hits_item_template
       }
     });
 
@@ -108,7 +108,7 @@
         container: '#hits-' + postTypeSlug,
         templates: {
           empty: 'No results',
-          item: '{{{_highlightResult.title.value}}}'
+          item: window.algolia.hits_item_template
         }
       });
 
