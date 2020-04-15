@@ -4,11 +4,11 @@ This plugin for WordPress wraps the [Algolia Search Client v2.6](https://www.alg
 
 Select which posts types to sync to Algolia. It will create the Algolia index using the post type name. 
 
-The data uploaded to Algolia can be customized with a filter. 
+The data of each post type uploaded to Algolia can be customized with a filter. 
 
 This plugin will also install [instantsearch.js 2.10.4](https://community.algolia.com/instantsearch.js/v2/getting-started.html)
 
-It will replace WordPress default search box for the Instant Search Search Box widget.
+It will enable 2 shortcodes for adding the Instant Search `Search Box` and the `Hits` widget.
 
 ## Prerequisites
 - PHP 7.2
