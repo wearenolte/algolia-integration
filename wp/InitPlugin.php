@@ -2,8 +2,8 @@
 
 namespace AlgoliaIntegration\wp;
 
-use AlgoliaIntegration\src\AlgoliaIntegration;
-use AlgoliaIntegration\src\PostSync;
+use AlgoliaIntegration\algolia\Client;
+use AlgoliaIntegration\wp\dashboard\SettingsPage;
 
 /**
  * Class InitPlugin
@@ -12,13 +12,44 @@ use AlgoliaIntegration\src\PostSync;
  */
 class InitPlugin {
 	/**
-	 * The Algolia integration init.
+	 * The Algolia Client Wrapper.
 	 *
 	 * @since 1.0.0
-	 *
-	 * @var AlgoliaIntegration
+	 * @var Client $algolia_client
 	 */
-	private static $algolia;
+	private $algolia_client;
+
+	/**
+	 * The Algolia App ID.
+	 *
+	 * @since 1.0.0
+	 * @var string $app_id
+	 */
+	private $app_id;
+
+	/**
+	 * The Algolia Admin api key.
+	 *
+	 * @since 1.0.0
+	 * @var string $admin_api_key
+	 */
+	private $admin_api_key;
+
+	/**
+	 * The Algolia Search-only key.
+
+	 * @since 1.0.0
+	 * @var string $search_key
+	 */
+	private $search_key;
+
+	/**
+	 * The post types to sync.
+	 *
+	 * @since 1.0.0
+	 * @var array $post_types
+	 */
+	private $post_types;
 
 	/**
 	 * The plugin name.
@@ -28,111 +59,68 @@ class InitPlugin {
 	const PLUGIN_NAME = 'algolia-integration';
 
 	/**
-	 * The Algolia App ID.
-	 *
-	 * @var string $app_id The app id.
-	 */
-	private $app_id;
-
-	/**
-	 * The Algolia Search-only key.
-	 *
-	 * @var string $search_key The search-only key.
-	 */
-	private $search_key;
-
-	/**
 	 * InitPlugin constructor.
 	 *
 	 * @since 1.0.0
 	 */
 	public function __construct() {
 		add_action( 'init', [ $this, 'init' ], 20 );
-		add_action( 'wp_enqueue_scripts', [ $this, 'load_instant_search_assets' ] );
+		register_deactivation_hook( plugin_basename( ALGOLIA_INTEGRATION_PLUGIN_FILE ), [ $this, 'deactivate' ] );
 	}
 
 	/**
 	 * Load Settings page and Algolia client and set posts types to sync.
+	 *
+	 * @since 1.0.0
 	 */
 	public function init() {
-		$settings = new SettingsPage( self::PLUGIN_NAME );
+		// Get options data.
+		$this->app_id        = (string) get_option( WP_DEBUG ? OptionsApiKeys::FIELD_APP_ID_TEST : OptionsApiKeys::FIELD_APP_ID );
+		$this->search_key    = (string) get_option( WP_DEBUG ? OptionsApiKeys::FIELD_SEARCH_ONLY_KEY_TEST : OptionsApiKeys::FIELD_SEARCH_ONLY_KEY );
+		$this->admin_api_key = (string) get_option( WP_DEBUG ? OptionsApiKeys::FIELD_ADMIN_API_KEY_TEST : OptionsApiKeys::FIELD_ADMIN_API_KEY );
+		$this->post_types    = (array) get_option( OptionsApiKeys::FIELD_POST_TYPES );
 
-		$this->app_id     = get_option( WP_DEBUG ? $settings::FIELD_APP_ID_TEST : $settings::FIELD_APP_ID );
-		$this->search_key = get_option( WP_DEBUG ? $settings::FIELD_SEARCH_ONLY_KEY_TEST : $settings::FIELD_SEARCH_ONLY_KEY );
-		$admin_api_key    = get_option( WP_DEBUG ? $settings::FIELD_ADMIN_API_KEY_TEST : $settings::FIELD_ADMIN_API_KEY );
+		// Init Settings page.
+		new SettingsPage( self::PLUGIN_NAME );
 
-		if ( $this->app_id && $admin_api_key ) {
-			self::$algolia = new AlgoliaIntegration( $this->app_id, $admin_api_key );
+		// Exit if required keys are empty.
+		if ( ! $this->app_id || ! $this->admin_api_key ) {
+			return;
+		}
 
-			$post_types = get_option( $settings::FIELD_POST_TYPES );
+		$this->algolia_client = new Client( $this->app_id, $this->admin_api_key );
 
-			foreach ( array_keys( $post_types ) as $post_type_slug ) {
-				$post_type = get_post_type_object( $post_type_slug );
-				$post_sync = new PostSync( $post_type_slug, self::$algolia->get_index( $post_type->labels->name ) );
-				$post_sync->set_searchable_attributes();
-			}
+		$post_types = new PostTypes( $this->algolia_client, $this->post_types );
+
+		// Init Instant Search.
+		new LoadAssets(
+			[
+				'app_id'     => $this->app_id,
+				'search_key' => $this->search_key,
+				'post_types' => $post_types->get_synced_post_types(),
+			]
+		);
+
+		// Init shortcodes.
+		new Shortcodes( $this->post_types );
+
+		// Init Post types sync.
+		foreach ( array_keys( $this->post_types ) as $post_type_slug ) {
+			$post_sync = new PostSync( $post_type_slug, $this->algolia_client );
+			$post_sync->set_default_searchable_fields();
 		}
 	}
 
 	/**
-	 * Load Instant Search JS assets.
+	 * Delete options in DB.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess)
 	 */
-	public function load_instant_search_assets() {
-		$js_path = ALGOLIA_INTEGRATION_PLUGIN_PATH . 'src/instant-search';
-
-		// Enqueue Instant Search JS.
-		wp_enqueue_script(
-			'algolia-search',
-			$js_path . '/instantsearch.js',
-			[],
-			'1.0.0',
-			true
-		);
-
-		// Declare Algolia App ID and Search key JS vars.
-		wp_register_script(
-			'algolia-js-vars',
-			'' ,
-			[],
-			'1.0.0',
-			true
-		);
-
-		wp_localize_script(
-			'algolia-js-vars',
-			'algolia',
-			[
-				'app_id'     => $this->app_id,
-				'search_key' => $this->search_key,
-			]
-		);
-
-		wp_enqueue_script( 'algolia-js-vars' );
-
-		// Enqueue Instant Search Widget instantiation.
-		wp_enqueue_script(
-			'algolia-instant-search-init',
-			$js_path . '/init.js',
-			[ 'algolia-search' ],
-			'1.0.0',
-			true
-		);
-
-		// Enqueue Instant Search Widget CSS.
-		if ( ! apply_filters( 'algolia_integration_disable_instant_search_css', false ) ) {
-			wp_enqueue_style(
-				'algolia-instantsearch',
-				$js_path . '/instantsearch.min.css',
-				[],
-				'1.0.0'
-			);
-
-			wp_enqueue_style(
-				'algolia-instantsearch-theme',
-				$js_path . '/instantsearch-theme-algolia.min.css',
-				[ 'algolia-instantsearch' ],
-				'1.0.0'
-			);
+	public static function deactivate() {
+		foreach ( OptionsApiKeys::get_options_keys() as $option_key ) {
+			delete_option( $option_key );
 		}
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace AlgoliaIntegration\wp;
+namespace AlgoliaIntegration\wp\dashboard;
 
 /**
  * Class SettingCheckboxGroup.
@@ -14,7 +14,7 @@ class SettingCheckboxGroup {
 	 * The key of the option where the field saves the value.
 	 *
 	 * @since 1.0.0
-	 * @var string The option key.
+	 * @var string $option_key
 	 */
 	private $option_key;
 

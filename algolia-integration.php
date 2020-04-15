@@ -3,6 +3,7 @@
 require_once __DIR__ . '/vendor/autoload.php';
 
 use AlgoliaIntegration\wp\InitPlugin;
+use AlgoliaIntegration\wp\OptionsApiKeys;
 
 /**
 * Plugin Name:     Algolia Integration
@@ -19,5 +20,6 @@ use AlgoliaIntegration\wp\InitPlugin;
 */
 
 define( 'ALGOLIA_INTEGRATION_PLUGIN_PATH', plugin_dir_url( __FILE__ ) );
+define( 'ALGOLIA_INTEGRATION_PLUGIN_FILE', __FILE__ );
 
 new InitPlugin();

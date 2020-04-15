@@ -77,20 +77,39 @@ add_filter(
 
 You can set the index settings with this filter.
 
-By default, the searchable attributes are the title and the content.
+By default, the searchable attributes is only the title.
 
 ```php
 add_filter(
 	'algolia_integration_index_settings_' . $post_type,
 	function() {
 	 return [
-        'searchableAttributes' => ['business_segment'],
+        'searchableAttributes' => ['content'],
      ];
 	}
 );
 ```
 
-### Disable Instant Search CSS assets loading
+### Disable Instant Search assets loading
+Disable Algolia Search CSS file
 ```php
 add_filter('algolia_integration_disable_instant_search_css', '__return_true' );
 ```
+Disable Algolia Search JS file
+```php
+add_filter('algolia_integration_disable_instant_search_js', '__return_true' );
+```
+Disable Algolia Search custom JS file that initializes the Search Box and Hits widgets.
+```php
+add_filter('algolia_integration_disable_instant_search_custom_js', '__return_true' );
+```
+
+## Shortcodes
+### Search Box
+Print the Instant Search Box widget using this shortcode:
+
+`print_algolia_search_box`
+
+Print the Instant Search Box hits (results) widget using this shortcode:
+
+`print_algolia_results`

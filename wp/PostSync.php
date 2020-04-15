@@ -1,24 +1,26 @@
 <?php
 
-namespace AlgoliaIntegration\src;
+namespace AlgoliaIntegration\wp;
 
 use Algolia\AlgoliaSearch\SearchIndex;
+use AlgoliaIntegration\algolia\Client;
+use AlgoliaIntegration\algolia\Record;
 
 /**
  * Class PostSync
  *
- * Syncs posts in Algolia.
+ * Syncs posts in Algolia on Post Save event.
  *
  * @package AlgoliaIntegration
  */
 class PostSync {
 	/**
-	 * The Algolia index.
+	 * The Algolia client.
 	 *
 	 * @since 1.0.0
 	 * @var $index
 	 */
-	private $index;
+	private $client;
 
 	/**
 	 * The post type.
@@ -28,19 +30,46 @@ class PostSync {
 	 */
 	private $post_type;
 
+	/**
+	 * An Algolia record..
+	 *
+	 * @since 1.0.0
+	 * @var Record $record
+	 */
+	private $record;
 
 	/**
 	 * PostSync constructor.
 	 *
 	 * @since 1.0.0
-	 * @param string      $post_type     The Post type to sync.
-	 * @param SearchIndex $index         The Algolia index.
+	 * @param string $post_type The Post type to sync.
+	 * @param Client $client    The Algolia client wrapper.
 	 */
-	public function __construct( string $post_type, SearchIndex $index ) {
-		$this->index     = $index;
+	public function __construct( string $post_type, Client $client ) {
+		$this->client    = $client;
 		$this->post_type = $post_type;
 
+		$this->record = new Record( $client->get_index( $post_type ) );
+
 		add_action( 'save_post_' . $post_type, [ $this, 'update_post' ], 10, 2 );
+	}
+
+	/**
+	 * Set the default searchable fields.
+	 *
+	 * @since 1.0.0
+	 */
+	public function set_default_searchable_fields() {
+		$default_index_settings = [
+			'searchableAttributes' => [ 'title' ],
+		];
+
+		$index_settings = apply_filters(
+			'algolia_integration_index_settings_' . $this->post_type,
+			$default_index_settings
+		);
+
+		$this->record->set_searchable_attributes( $index_settings );
 	}
 
 	/**
@@ -61,16 +90,12 @@ class PostSync {
 			$record['objectID'] = implode( '#', [ $the_post->post_type, $the_post->ID ] );
 		}
 
-		try {
-			if ( 'publish' !== $the_post->post_status ) {
-				$this->index->deleteObject( $record['objectID'] );
-				return;
-			}
-
-			$this->index->saveObject( $record );
-		} catch ( \Exception $e ) {
-			error_log( 'Error synching to Algolia' );
+		if ( 'publish' !== $the_post->post_status ) {
+			$this->record->delete( $record['objectID'] );
+			return;
 		}
+
+		$this->record->save( $record );
 	}
 
 	/**
@@ -80,7 +105,7 @@ class PostSync {
 	 * @param \WP_Post $the_post The post object.
 	 * @return array
 	 */
-	public function format_post( \WP_Post $the_post ) {
+	public function format_post( \WP_Post $the_post ) : array {
 		$tags = array_map(
 			function ( \WP_Term $term ) {
 				return $term->name;
@@ -111,23 +136,5 @@ class PostSync {
 		];
 
 		return apply_filters( 'algolia_integration_format_' . $the_post->post_type, $default_fields, $the_post->ID );
-	}
-
-	/**
-	 * Set the default searchable atrtibutes of an index.
-	 *
-	 * Docs: https://www.algolia.com/doc/api-reference/api-methods/set-settings/
-	 */
-	public function set_searchable_attributes() {
-		$default_index_settings = [
-			'searchableAttributes' => [ 'title', 'content' ],
-		];
-
-		$this->index->setSettings(
-			apply_filters(
-				'algolia_integration_index_settings_' . $this->post_type,
-				$default_index_settings
-			)
-		);
 	}
 }
