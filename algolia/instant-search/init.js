@@ -32,6 +32,22 @@
   }
 
   /**
+   * Checks if the widget config options contains the method "container".
+   * If it doesn't, then add the container method with the default value (templateDOMId).
+   *
+   * @param {object} config The Hits widget config options.
+   * @param {string} templateDOMId The widget template key.
+   * @returns {object}
+   */
+  function updateWidgetTemplate( config, templateDOMId ) {
+    if ( ! config.hasOwnProperty( 'container' ) ) {
+      config.container = templateDOMId;
+    }
+
+    return config;
+  }
+
+  /**
    * Sets all the secondary index searches.
    *
    * @param {object} helper
@@ -48,46 +64,12 @@
   }
 
   /**
-   * Init Main Search for main Post Type.
-   *
-   * @param {array} secondarySearches The build search function.
-   */
-  function buildMainSearch( secondarySearches ) {
-    var mainSearchKey = getMainSearchPostTypeKey();
-
-    var mainSearch = window.instantsearch({
-      appId: window.algolia.app_id,
-      apiKey: window.algolia.search_key,
-      indexName: mainSearchKey,
-      routine: true,
-      searchFunction: function( helper ) {
-        var query = mainSearch.helper.state.query;
-        setSecondarySearches( helper, query, secondarySearches );
-      },
-      searchParameters: {
-        hitsPerPage: 3
-      }
-    });
-
-    var mainSearchHitsWidget = window.instantsearch.widgets.hits({
-      container: '#hits-' + mainSearchKey,
-      templates: {
-        empty: 'No results',
-        item: window.algolia.hits_item_template
-      }
-    });
-
-    mainSearch.addWidget( mainSearchHitsWidget );
-
-    return mainSearch;
-  }
-
-  /**
    * Init the secondary Search and widgets.
    *
+   * @param {bool} print_hits_widget Create the Hits widgets for the secondary searches?
    * @return {array}
    */
-  function buildSecondarySearches() {
+  function buildSecondarySearches( print_hits_widget ) {
     var secondarySearches = getSecondarySearchesKeys();
     var searchWidgets = [];
 
@@ -104,13 +86,12 @@
         }
       });
 
-      var hitsWidget = window.instantsearch.widgets.hits({
-        container: '#hits-' + postTypeSlug,
-        templates: {
-          empty: 'No results',
-          item: window.algolia.hits_item_template
-        }
-      });
+      var hitsWidget = window.instantsearch.widgets.hits(
+        updateWidgetTemplate(
+          window.algolia.hits_config,
+          '.algolia-hits-' + postTypeSlug
+        )
+      );
 
       search.addWidget( hitsWidget );
       search.start();
@@ -121,15 +102,45 @@
     return searchWidgets;
   }
 
-  var secondarySearches = buildSecondarySearches();
+  var secondarySearches = buildSecondarySearches( window.print_algolia_hits_widget );
 
-  var mainSearch = buildMainSearch( secondarySearches );
+  var mainSearchKey = getMainSearchPostTypeKey();
 
-  var searchBox = window.instantsearch.widgets.searchBox({
-    container: '#searchbox',
-    placeholder: 'Search'
+  var mainSearch = window.instantsearch({
+    appId: window.algolia.app_id,
+    apiKey: window.algolia.search_key,
+    indexName: mainSearchKey,
+    routine: true,
+    searchFunction: function( helper ) {
+      var query = mainSearch.helper.state.query;
+      setSecondarySearches( helper, query, secondarySearches );
+    },
+    searchParameters: {
+      hitsPerPage: 3
+    }
   });
 
-  mainSearch.addWidget( searchBox );
+  if ( window.print_algolia_search_box_widget ) {
+    var searchBox = window.instantsearch.widgets.searchBox(
+      updateWidgetTemplate(
+        window.algolia.search_box_config,
+        '.algolia-searchbox'
+      )
+    );
+
+    mainSearch.addWidget( searchBox );
+  }
+
+  if ( window.print_algolia_hits_widget ) {
+    var mainSearchHitsWidget = window.instantsearch.widgets.hits(
+      updateWidgetTemplate(
+        window.algolia.hits_config,
+        '.algolia-hits-' + mainSearchKey
+      )
+    );
+
+    mainSearch.addWidget( mainSearchHitsWidget );
+  }
+
   mainSearch.start();
 })( window.algolia.post_types );
