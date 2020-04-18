@@ -40,11 +40,13 @@
    * @returns {object}
    */
   function updateWidgetTemplate( config, templateDOMId ) {
+    var clone = JSON.parse( JSON.stringify( config ) );
+
     if ( ! config.hasOwnProperty( 'container' ) ) {
-      config.container = templateDOMId;
+      clone.container = templateDOMId;
     }
 
-    return config;
+    return clone;
   }
 
   /**
@@ -96,7 +98,7 @@
       search.addWidget( hitsWidget );
       search.start();
 
-      searchWidgets.push( search )
+      searchWidgets.push( search );
     }
 
     return searchWidgets;
