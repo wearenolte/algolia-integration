@@ -40,13 +40,55 @@
    * @returns {object}
    */
   function updateWidgetTemplate( config, templateDOMId ) {
-    var clone = JSON.parse( JSON.stringify( config ) );
+    var clonedConfig = JSON.parse( JSON.stringify( config ) );
 
     if ( ! config.hasOwnProperty( 'container' ) ) {
-      clone.container = templateDOMId;
+      clonedConfig.container = templateDOMId;
     }
 
-    return clone;
+    return clonedConfig;
+  }
+
+  /**
+   * Merges the Search Instance configuration with the custom config from the
+   * user.
+   *
+   * The methods appID, apiKey, indexName can't be overwritten by the user.
+   *
+   * @param config
+   * @param index
+   * @returns {any}
+   */
+  function updateSearchConfig( config, index ) {
+    var clonedConfig = JSON.parse( JSON.stringify( config ) );
+
+    clonedConfig.appId = window.algolia.app_id;
+    clonedConfig.apiKey = window.algolia.search_key;
+    clonedConfig.indexName = index;
+
+    return clonedConfig;
+  }
+
+  /**
+   * Merges the Search Instance configuration with the custom config from the
+   * user.
+   *
+   * If the method searchFunction is not present in the user config then use the default one.
+   *
+   * @param config
+   * @param index
+   * @returns {any}
+   */
+  function updateMainSearchConfig( config, index ) {
+    var clonedConfig = updateSearchConfig( config, index );
+
+    if ( ! config.hasOwnProperty( 'searchFunction' ) ) {
+      clonedConfig.searchFunction = function( helper ) {
+        setSecondarySearches( helper, mainSearch.helper.state.query, secondarySearches );
+      };
+    }
+
+    return clonedConfig;
   }
 
   /**
@@ -78,15 +120,9 @@
     for ( index = 0; index < secondarySearches.length; ++index ) {
       var postTypeSlug = secondarySearches[ index ];
 
-      var search = window.instantsearch({
-        appId: window.algolia.app_id,
-        apiKey: window.algolia.search_key,
-        indexName: postTypeSlug,
-        routine: true,
-        searchParameters: {
-          hitsPerPage: 3
-        }
-      });
+      var search = window.instantsearch(
+        updateSearchConfig( window.algolia.secondary_search_config, postTypeSlug )
+      );
 
       var hitsWidget = window.instantsearch.widgets.hits(
         updateWidgetTemplate(
@@ -108,19 +144,9 @@
 
   var mainSearchKey = getMainSearchPostTypeKey();
 
-  var mainSearch = window.instantsearch({
-    appId: window.algolia.app_id,
-    apiKey: window.algolia.search_key,
-    indexName: mainSearchKey,
-    routine: true,
-    searchFunction: function( helper ) {
-      var query = mainSearch.helper.state.query;
-      setSecondarySearches( helper, query, secondarySearches );
-    },
-    searchParameters: {
-      hitsPerPage: 3
-    }
-  });
+  var mainSearch = window.instantsearch(
+    updateMainSearchConfig( window.algolia.main_search_config, mainSearchKey )
+  );
 
   if ( window.print_algolia_search_box_widget ) {
     var searchBox = window.instantsearch.widgets.searchBox(
