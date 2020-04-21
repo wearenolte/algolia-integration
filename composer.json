@@ -38,14 +38,13 @@
         ],
         "set-up-php-lint": [
             "phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs/",
-            "phpcs --config-set default_standard ./phpcs.xml",
             "phpcs --config-set show_progress 1",
             "phpcs --config-set colors 1",
             "phpcs --config-set show_warnings 1",
             "phpcs --config-set ignore_warnings_on_exit 1"
         ],
         "lint": [
-            "phpcs . --extensions=php",
+            "phpcs . --extensions=php --ignore=/vendor/*",
             "phpmd . text phpmd.xml --suffixes php --exclude vendor"
         ],
         "fix": [
