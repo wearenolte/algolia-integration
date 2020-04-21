@@ -19,10 +19,7 @@ jobs:
 
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress --no-suggest
- 
-    - name: Setup Linter
-      run: composer set-up-php-lint
-      
+
     - name: Run linter
       run: composer lint
 
