@@ -110,12 +110,40 @@ class InitPlugin {
 		// Init Instant Search.
 		new LoadAssets(
 			[
-				'app_id'             => $this->app_id,
-				'search_key'         => $this->search_key,
-				'post_types'         => $post_types->get_synced_post_types(),
-				'hits_item_template' => apply_filters(
-					'algolia_integration_hits_template',
-					'<a href="{{{url}}}">{{{_highlightResult.title.value}}}</a>'
+				'app_id'                  => $this->app_id,
+				'search_key'              => $this->search_key,
+				'post_types'              => apply_filters(
+					'algolia_integration_widgets_post_types',
+					$post_types->get_synced_post_types()
+				),
+				'search_box_config'       => apply_filters(
+					'algolia_integration_search_box_config',
+					[ 'placeholder' => 'Search' ]
+				),
+				'hits_config'             => apply_filters(
+					'algolia_integration_hits_config',
+					[
+						'templates' => [
+							'empty' => 'No results',
+							'item'  => '<a href="{{{url}}}">{{{_highlightResult.title.value}}}</a>',
+						],
+					]
+				),
+				'main_search_config'      => apply_filters(
+					'algolia_integration_main_search_config',
+					[
+						'searchParameters' => [
+							'hitsPerPage' => 3,
+						],
+					]
+				),
+				'secondary_search_config' => apply_filters(
+					'algolia_integration_secondary_search_config',
+					[
+						'searchParameters' => [
+							'hitsPerPage' => 3,
+						],
+					]
 				),
 			]
 		);

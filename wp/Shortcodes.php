@@ -36,7 +36,13 @@ class Shortcodes {
 	 * @return string
 	 */
 	public function print_search_box() {
-		return '<div id="searchbox"></div>';
+		wp_localize_script(
+			'algolia-js-vars',
+			'print_algolia_search_box_widget',
+			'true'
+		);
+
+		return '<div class="algolia-searchbox"></div>';
 	}
 
 	/**
@@ -46,10 +52,16 @@ class Shortcodes {
 	 * @return string
 	 */
 	public function print_results() {
+		wp_localize_script(
+			'algolia-js-vars',
+			'print_algolia_hits_widget',
+			'true'
+		);
+
 		$results_html = '';
 
 		foreach ( array_keys( $this->post_types ) as $post_type ) {
-			$results_html .= '<div id="hits-' . esc_attr( $post_type ) . '"></div>';
+			$results_html .= '<div class="algolia-hits-' . esc_attr( $post_type ) . '"></div>';
 		}
 
 		return $results_html;

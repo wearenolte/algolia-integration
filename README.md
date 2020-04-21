@@ -62,14 +62,14 @@ add_filter(
 	'algolia_integration_format_' . $post_type,
 	function( $record_format, $post_id ) {
 		return array_merge(
-		    $record_format,
+            $record_format,
             [
                 'acf_field1' => 'custom_data',
                 'acf_field2' => 'custom_data',
             ]
-		);
-	},
-	10, 2
+        );
+    },
+    10, 2
 );
 ```
 
@@ -79,16 +79,21 @@ You can set the index settings with this filter.
 
 By default, the searchable attributes is only the title.
 
+Example: 
 ```php
 add_filter(
 	'algolia_integration_index_settings_' . $post_type,
 	function() {
-	 return [
-        'searchableAttributes' => ['content'],
-     ];
-	}
+        return [
+            'searchableAttributes'  => ['content'],
+            'attributesToHighlight' => [ 'title', 'excerpt' ],
+            'attributesForFaceting' => [ 'category' ]
+        ];
+    }
 );
 ```
+
+View More Info: https://www.algolia.com/doc/api-reference/settings-api-parameters/
 
 ### Disable Instant Search assets loading
 Disable Algolia Search CSS file
@@ -104,22 +109,117 @@ Disable Algolia Search custom JS file that initializes the Search Box and Hits w
 add_filter('algolia_integration_disable_instant_search_custom_js', '__return_true' );
 ```
 
-## Shortcodes
-### Search Box
+## Instant Search widgets
+The plugin comes with 2 Instant Search widgets preconfigured: [Search Box](https://community.algolia.com/instantsearch.js/v2/widgets/searchBox.html) and [Hits](https://community.algolia.com/instantsearch.js/v2/widgets/hits.html) widgets.
+
+This widgets will search by default on all post types that you marked for syncing in the Plugin's Settings.
+
+### Search Box widget
 Print the Instant Search Box widget using this shortcode:
 
 `print_algolia_search_box`
+
+##Hits widget (Results)
 
 Print the Instant Search Box hits (results) widget using this shortcode:
 
 `print_algolia_results`
 
-## Change the hits item template
+### Customize the widgets settings
+
+## Set Post Types
+
+By default, the widgets will search on the post types selected on the Setting's page.
+
+To change the post types used by the widgets, use the following filter:
+
+Example:
 ```php
 add_filter( 
-    'algolia_integration_hits_template', 
+    'algolia_integration_widgets_post_types', 
     function() { 
-        return '<li>{{{_highlightResult.title.value}}}</li>'; 
+        return [
+                'post',
+                'custom_post_type_1',
+                'custom_post_type_2',
+            ],
+        ];
+    } 
+);
+
+Note: Make sure the post types added are selected in the Plugin's Settings page or the widgets won't initialize. 
+
+## Instant Search initialization
+To be able to use the Search Box to work with all the post types, a special configuration with [the Instant Search initialization](https://community.algolia.com/instantsearch.js/v2/instantsearch.html) was required:
+
+The widgets are configured with one "main" Instant Search initialization (Main Search) and multiple "secondary" Instant Search initializations (Secondary Search).
+
+The Main Search is set with the first Algolia index which is the first Post Type in the Post Type list in the Setting's page. This Main Search is important because it contains the SearchFunction method which ties all the post types indexes with the Search Box widget.
+
+Note: the SearchFunction method can't be overwritten.
+
+The Secondary Search is set with the remaining of the post types.
+
+## Change the Main Search settings
+Example: 
+```php
+add_filter( 
+    'algolia_integration_main_search_config', 
+    function() { 
+        return [
+            'searchParameters' => [
+                'hitsPerPage' => 3,
+                'filters' => 'category:term',
+            ],
+        ];
+    } 
+);
+```
+
+View More Info: https://www.algolia.com/doc/api-reference/api-parameters/searchableAttributes/
+
+## Change the Secondary Search settings
+Example: 
+```php
+add_filter( 
+    'algolia_integration_secondary_search_config', 
+    function() { 
+        return [
+            'searchParameters' => [
+                'hitsPerPage' => 3,
+                'filters' => 'category:term',
+            ],
+        ];
+    } 
+);
+```
+
+## Change the Search Box widget settings
+Example: 
+```php
+add_filter( 
+    'algolia_integration_search_box_config', 
+    function() { 
+        return [
+            'autofocus'   => false,
+            'placeholder' => 'Type here to search',
+        ]; 
+    } 
+);
+```
+
+## Change the Hits widget settings
+Example: 
+```php
+add_filter( 
+    'algolia_integration_hits_config', 
+    function() { 
+        return [
+            'templates' => [
+                'empty' => 'No results',
+                'item'  => '<li>{{{_highlightResult.title.value}}}</li>',
+            ]
+        ];
     } 
 );
 ```
